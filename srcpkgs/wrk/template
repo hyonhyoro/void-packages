@@ -1,0 +1,21 @@
+# Template file for 'wrk'
+pkgname=wrk
+version=4.0.2
+revision=1
+build_style=gnu-makefile
+make_build_args="WITH_LUAJIT=/usr WITH_OPENSSL=/usr"
+makedepends="libressl-devel LuaJIT-devel"
+short_desc="Modern HTTP benchmarking tool"
+maintainer="Kazuho Sakoda <hyonhyoro.kazuho@gmail.com>"
+license="Apache-2.0"
+homepage="https://github.com/wg/wrk"
+distfiles="https://github.com/wg/${pkgname}/archive/${version}.tar.gz"
+checksum=a4a6ad6727733023771163e7250189a9a23e6253b5e5025191baa6092d5a26fb
+
+do_install() {
+	vbin ${pkgname}
+	vdoc CHANGES
+	vdoc README
+	vdoc SCRIPTING
+	vcopy scripts usr/share/doc/${pkgname}
+}
