@@ -1,0 +1,14 @@
+# Template file for 'fcitx-skk'
+pkgname=fcitx-skk
+version=0.1.2
+revision=1
+build_style=cmake
+hostmakedepends="pkg-config"
+makedepends="libgee08-devel libskk-devel fcitx-devel
+  libfcitx-qt libfcitx-qt-devel"
+short_desc="SKK IME for Fcitx"
+maintainer="Kazuho Sakoda <hyonhyoro.kazuho@gmail.com>"
+license="GPL-3"
+homepage="https://fcitx-im.org"
+distfiles="https://download.fcitx-im.org/${pkgname}/${pkgname}-${version}.tar.xz"
+checksum=b22404a01fd8aabfa2d687969f8e9eefb18a8e42daa91de4c428331f45e4bdf5
