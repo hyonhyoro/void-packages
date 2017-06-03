@@ -5,7 +5,7 @@ revision=1
 build_style=cmake
 hostmakedepends="pkg-config"
 makedepends="libgee08-devel libskk-devel fcitx-devel
- libfcitx-qt libfcitx-qt-devel"
+ qt-devel libfcitx-qt libfcitx-qt-devel"
 short_desc="SKK IME for Fcitx"
 maintainer="Kazuho Sakoda <hyonhyoro.kazuho@gmail.com>"
 license="GPL-3"
