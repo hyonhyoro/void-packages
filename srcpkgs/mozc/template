@@ -1,0 +1,82 @@
+# Template file for 'mozc'
+pkgname=mozc
+version=2.18
+revision=1
+_githash=2315f957d1785130c2ed196e141a330b0857b065
+_fcitx_patchver=2.18.2612.102.1
+hostmakedepends="clang python pkg-config git curl"
+makedepends="libglib-devel qt-devel gtk+-devel libxcb-devel
+ zinnia-tomoe ibus-devel fcitx-devel"
+short_desc="Japanese input method editor"
+maintainer="Kazuho Sakoda <hyonhyoro.kazuho@gmail.com>"
+license="3-clause-BSD"
+homepage="https://github.com/google/mozc"
+
+do_fetch() {
+	if [ ! -d ${XBPS_BUILDDIR}/depot_tools ]; then
+		git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git ${XBPS_BUILDDIR}/depot_tools
+	fi
+
+	if [ ! -d ${wrksrc} ]; then
+		git clone https://github.com/google/mozc.git -b master --single-branch ${wrksrc}
+		cd ${wrksrc}
+		git checkout ${_githash}
+		git submodule update --init --recursive
+	fi
+
+	cd ${wrksrc}/src
+	echo "Downloading fcitx-mozc patch file ..."
+	curl -LO https://download.fcitx-im.org/fcitx-mozc/fcitx-mozc-${_fcitx_patchver}.patch
+
+	echo "Downloading fcitx-mozc-icon ..."
+	curl -L https://download.fcitx-im.org/fcitx-mozc/fcitx-mozc-icon.tar.gz | tar xvz
+}
+
+do_configure() {
+	cd ${wrksrc}/src
+	echo "Apply fcitx patch ..."
+	rm -rf unix/fcitx
+	patch -Np2 -i ${wrksrc}/src/fcitx-mozc-${_fcitx_patchver}.patch
+}
+
+do_build() {
+	export PATH=$PATH:${XBPS_BUILDDIR}/depot_tools
+
+	cd ${wrksrc}/src
+
+	GYP_DEFINES="ibus_mozc_path=/usr/lib/ibus-mozc/ibus-engine-mozc \
+		ibus_mozc_icon_path=/usr/share/ibus-mozc/product_icon.png \
+		document_dir=/usr/share/doc/mozc \
+		zinnia_model_file=/usr/share/zinnia/model/tomoe/handwriting-ja.model" \
+		python build_mozc.py gyp
+
+	python build_mozc.py build -c Release \
+		unix/ibus/ibus.gyp:ibus_mozc \
+		unix/emacs/emacs.gyp:mozc_emacs_helper \
+		server/server.gyp:mozc_server \
+		gui/gui.gyp:mozc_tool \
+		renderer/renderer.gyp:mozc_renderer \
+		unix/fcitx/fcitx.gyp:fcitx-mozc
+}
+
+do_install() {
+	echo "Nothing to do"
+}
+
+# ibus-mozc_package() {
+# 	pkg_install() {
+# 		#vmove path
+# 	}
+# }
+
+# emacs-mozc_package() {
+# 	pkg_install() {
+# 		#vmove path
+# 	}
+# }
+
+# fcitx-mozc_package() {
+# 	pkg_install() {
+# 		#vmove path
+# 	}
+# }

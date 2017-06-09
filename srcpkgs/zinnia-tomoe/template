@@ -1,0 +1,20 @@
+# Template file for 'zinnia-tomoe'
+pkgname=zinnia-tomoe
+version=0.6.0
+revision=1
+_datever=20080911
+noarch=yes
+wrksrc="${pkgname}-${version}-${_datever}"
+build_style=gnu-configure
+hostmakedepends="pkg-config"
+makedepends="zinnia-devel"
+short_desc="Zinnia recognition model files trained with Tomoe"
+maintainer="Kazuho Sakoda <hyonhyoro.kazuho@gmail.com>"
+license="BSD"
+homepage="http://taku910.github.io/zinnia/index.html"
+distfiles="${SOURCEFORGE_SITE}/zinnia/${pkgname}-${version}-${_datever}.tar.bz2"
+checksum=fd1a264b8aeea0ebec59e8c8765864a9543a75fb2dba349745bb3a3587790927
+
+post_install() {
+	vlicense COPYING
+}
