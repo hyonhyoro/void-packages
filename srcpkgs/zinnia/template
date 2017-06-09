@@ -1,0 +1,28 @@
+# Template file for 'zinnia'
+pkgname=zinnia
+version=0.06
+revision=1
+build_style=gnu-configure
+hostmakedepends="pkg-config"
+short_desc="Online hand recognition system with machine learning"
+maintainer="Kazuho Sakoda <hyonhyoro.kazuho@gmail.com>"
+license="BSD"
+homepage="http://taku910.github.io/zinnia/index.html"
+distfiles="${SOURCEFORGE_SITE}/${pkgname}/${pkgname}-${version}.tar.gz"
+checksum=ece3af93f937282971634fd81d3e997f848e8cfa958220e26a4564ca064ac20b
+CPPFLAGS="-fPIC"
+
+post_install() {
+	vlicense COPYING
+}
+
+zinnia-devel_package() {
+	depends="zinnia-${version}_${revision}"
+	short_desc+=" - development files"
+	pkg_install() {
+		vmove usr/include
+		vmove usr/lib/pkgconfig
+		vmove "usr/lib/*.a"
+		vmove "usr/lib/*.so"
+	}
+}

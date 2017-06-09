@@ -1,0 +1,10 @@
+--- trainer.cpp	2017-06-09 10:47:18.942911469 +0900
++++ trainer.cpp	2017-06-09 10:47:21.360901341 +0900
+@@ -103,7 +103,7 @@ class TrainerImpl: public Trainer {
+     if (!fn) {
+       return false;
+     }
+-    x_.push_back(std::make_pair<std::string, FeatureNode *>(y, fn));
++    x_.push_back(std::make_pair(y, fn));
+     return true;
+   }
