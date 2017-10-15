@@ -13,16 +13,12 @@ license="3-clause-BSD"
 homepage="https://github.com/google/mozc"
 
 do_fetch() {
-	if [ ! -d ${XBPS_BUILDDIR}/depot_tools ]; then
-		git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git ${XBPS_BUILDDIR}/depot_tools
-	fi
+	git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git ${XBPS_BUILDDIR}/depot_tools
 
-	if [ ! -d ${wrksrc} ]; then
-		git clone https://github.com/google/mozc.git -b master --single-branch ${wrksrc}
-		cd ${wrksrc}
-		git checkout ${_githash}
-		git submodule update --init --recursive
-	fi
+	git clone https://github.com/google/mozc.git -b master --single-branch ${wrksrc}
+	cd ${wrksrc}
+	git checkout ${_githash}
+	git submodule update --init --recursive
 
 	cd ${wrksrc}/src
 	echo "Downloading fcitx-mozc patch file ..."
@@ -44,14 +40,14 @@ do_build() {
 
 	cd ${wrksrc}/src
 
-	GYP_DEFINES="ibus_mozc_path=/usr/lib/ibus-mozc/ibus-engine-mozc \
+	GYP_DEFINES="ibus_mozc_path=/usr/libexec/ibus-mozc \
 		ibus_mozc_icon_path=/usr/share/ibus-mozc/product_icon.png \
 		document_dir=/usr/share/doc/mozc \
 		zinnia_model_file=/usr/share/zinnia/model/tomoe/handwriting-ja.model" \
 		python build_mozc.py gyp
 
 	python build_mozc.py build -c Release \
-		unix/ibus/ibus.gyp:ibus_mozc \
+		unix/ibus/ibus.gyp:ibus-mozc \
 		unix/emacs/emacs.gyp:mozc_emacs_helper \
 		server/server.gyp:mozc_server \
 		gui/gui.gyp:mozc_tool \
@@ -60,23 +56,81 @@ do_build() {
 }
 
 do_install() {
-	echo "Nothing to do"
+	_mozcdir=/usr/lib/mozc
+
+	vmkdir ${_mozcdir}
+	vinstall ${wrksrc}/src/out_linux/Release/gen_collocation_data_main 755 ${_mozcdir}
+	vinstall ${wrksrc}/src/out_linux/Release/gen_collocation_suppression_data_main 755 ${_mozcdir}
+	vinstall ${wrksrc}/src/out_linux/Release/gen_oss_sbm 755 ${_mozcdir}
+	vinstall ${wrksrc}/src/out_linux/Release/gen_suggestion_filter_main 755 ${_mozcdir}
+	vinstall ${wrksrc}/src/out_linux/Release/gen_symbol_rewriter_dictionary_main 755 ${_mozcdir}
+	vinstall ${wrksrc}/src/out_linux/Release/gen_system_dictionary_data_main 755 ${_mozcdir}
+	vinstall ${wrksrc}/src/out_linux/Release/gen_usage_rewriter_dictionary_main 755 ${_mozcdir}
+	vinstall ${wrksrc}/src/out_linux/Release/mozc_renderer 755 ${_mozcdir}
+	vinstall ${wrksrc}/src/out_linux/Release/mozc_server 755 ${_mozcdir}
+	vinstall ${wrksrc}/src/out_linux/Release/mozc_tool 755 ${_mozcdir}
+	vinstall ${wrksrc}/src/out_linux/Release/protoc 755 ${_mozcdir}
 }
 
-# ibus-mozc_package() {
-# 	pkg_install() {
-# 		#vmove path
-# 	}
-# }
+ibus-mozc_package() {
+	depends="mozc-${version}_${revision}"
+	short_desc+=" - ibus module"
+	pkg_install() {
+		_ibusdir=/usr/share/ibus-mozc
 
-# emacs-mozc_package() {
-# 	pkg_install() {
-# 		#vmove path
-# 	}
-# }
+		vmkdir ${_ibusdir}
+		vinstall ${wrksrc}/src/out_linux/Release/ibus_mozc 755 /usr/libexec
+		vinstall ${wrksrc}/src/out_linux/Release/gen/unix/ibus/mozc.xml 755 /usr/share/ibus/component
+		vinstall ${wrksrc}/src/data/images/unix/ime_product_icon_opensource-32.png 644 ${_ibusdir} product_icon.png
+		vinstall ${wrksrc}/src/data/images/unix/ui-alpha_full.png 644 ${_ibusdir}
+		vinstall ${wrksrc}/src/data/images/unix/ui-alpha_half.png 644 ${_ibusdir}
+		vinstall ${wrksrc}/src/data/images/unix/ui-dictionary.png 644 ${_ibusdir}
+		vinstall ${wrksrc}/src/data/images/unix/ui-direct.png 644 ${_ibusdir}
+		vinstall ${wrksrc}/src/data/images/unix/ui-hiragana.png 644 ${_ibusdir}
+		vinstall ${wrksrc}/src/data/images/unix/ui-katakana_full.png 644 ${_ibusdir}
+		vinstall ${wrksrc}/src/data/images/unix/ui-katakana_half.png 644 ${_ibusdir}
+		vinstall ${wrksrc}/src/data/images/unix/ui-properties.png 644 ${_ibusdir}
+		vinstall ${wrksrc}/src/data/images/unix/ui-tool.png 644 ${_ibusdir}
+	}
+}
 
-# fcitx-mozc_package() {
-# 	pkg_install() {
-# 		#vmove path
-# 	}
-# }
+emacs-mozc_package() {
+	depends="mozc-${version}_${revision}"
+	short_desc+=" - emacs module"
+	pkg_install() {
+		vinstall ${wrksrc}/src/out_linux/Release/mozc_emacs_helper 755 /usr/bin
+		vmkdir /usr/share/emacs/site-lisp/emacs-mozc
+		vinstall ${wrksrc}/src/unix/emacs/mozc.el 644 /usr/share/emacs/site-lisp/emacs-mozc
+	}
+}
+
+fcitx-mozc_package() {
+	depends="mozc-${version}_${revision}"
+	short_desc+=" - fcitx module"
+	pkg_install() {
+		for mofile in ${wrksrc}/src/out_linux/Release/gen/unix/fcitx/po/*.mo; do
+			filename=$(basename $mofile)
+			lang=${filename/.mo/}
+			vinstall ${mofile} 644 /usr/share/locale/${lang}/LC_MESSAGES fcitx-mozc.mo
+		done
+
+		vmkdir /usr/lib/fcitx
+		vinstall ${wrksrc}/src/out_linux/Release/fcitx-mozc.so 755 /usr/lib/fcitx
+		vmkdir /usr/share/fcitx/addon
+		vmkdir /usr/share/fcitx/inputmethod
+		vinstall ${wrksrc}/src/unix/fcitx/fcitx-mozc.conf 644 /usr/share/fcitx/addon
+		vinstall ${wrksrc}/src/unix/fcitx/mozc.conf 644 /usr/share/fcitx/inputmethod
+
+		vmkdir /usr/share/fcitx/mozc/icon
+		vinstall ${wrksrc}/src/fcitx-mozc-icons/mozc-alpha_full.png 644 /usr/share/fcitx/mozc/icon
+		vinstall ${wrksrc}/src/fcitx-mozc-icons/mozc-alpha_half.png 644 /usr/share/fcitx/mozc/icon
+		vinstall ${wrksrc}/src/fcitx-mozc-icons/mozc-dictionary.png 644 /usr/share/fcitx/mozc/icon
+		vinstall ${wrksrc}/src/fcitx-mozc-icons/mozc-direct.png 644 /usr/share/fcitx/mozc/icon
+		vinstall ${wrksrc}/src/fcitx-mozc-icons/mozc-hiragana.png 644 /usr/share/fcitx/mozc/icon
+		vinstall ${wrksrc}/src/fcitx-mozc-icons/mozc-katakana_full.png 644 /usr/share/fcitx/mozc/icon
+		vinstall ${wrksrc}/src/fcitx-mozc-icons/mozc-katakana_half.png 644 /usr/share/fcitx/mozc/icon
+		vinstall ${wrksrc}/src/fcitx-mozc-icons/mozc-properties.png 644 /usr/share/fcitx/mozc/icon
+		vinstall ${wrksrc}/src/fcitx-mozc-icons/mozc-tool.png 644 /usr/share/fcitx/mozc/icon
+		vinstall ${wrksrc}/src/fcitx-mozc-icons/mozc.png 644 /usr/share/fcitx/mozc/icon
+	}
+}
